@@ -41,18 +41,27 @@ A ecommerce service that focuses on product management and order processing.
    * Supports optional query parameters for:
       * Search terms (search by name, description)
       * Category filtering
-      * Pagination 
+      * Pagination
+ 
+* **GET /products/search**
+   * Search products by name
 
+* **GET /categories/{id}**
+   * Retrieves details for a specific category by its ID.
+  
 * **GET /categories**
    * Retrieves a list of available product categories.
    * Potentially supports a hierarchical view (if the category structure allows it).
+
+* **GET /categories/search**
+   * Search categories by name
 
 * **Admin-Level Endpoints (Authentication/Authorization Required)**
    * **POST /products** - Create a new product
    * **PUT /products/{id}** - Update an existing product
    * **DELETE /products/{id}** - Delete a product
-   * Similar endpoints for managing categoriesAlright, let's do a similar Markdown style breakdown for the Inventory Management Service.
-
+   * **POST /categories** - Create a new category
+   * **PUT /categories/{id}** - Update an existing category
 ### **Inventory Management Service**
 
 **Purpose**
