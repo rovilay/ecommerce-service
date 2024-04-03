@@ -8,33 +8,26 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/rovilay/ecommerce-service/domains/product"
 	"github.com/rs/zerolog"
 )
 
 type ProductApp struct {
-	router http.Handler
-	config Config
-	db     *sqlx.DB
-	log    *zerolog.Logger
+	router  http.Handler
+	config  Config
+	db      *sqlx.DB
+	log     *zerolog.Logger
+	service *product.Service
 }
 
-func NewProductApp(c Config, log *zerolog.Logger) *ProductApp {
+func NewProductApp(db *sqlx.DB, s *product.Service, c Config, log *zerolog.Logger) *ProductApp {
 	appLogger := log.With().Str("package", "productApp").Logger()
 
-	connectionURL := fmt.Sprintf(
-		"postgresql://%s:%s@%s:%s/ecommerce-service-products?sslmode=disable",
-		c.DBUser, c.DBPassword, c.DBHost, c.DBPort,
-	)
-
-	db, err := sqlx.Connect("pgx", connectionURL)
-	if err != nil {
-		appLogger.Fatal().Err(err).Msg(fmt.Sprintf("failed to connect to DB %s", connectionURL))
-	}
-
 	app := &ProductApp{
-		config: c,
-		log:    log,
-		db:     db,
+		config:  c,
+		log:     &appLogger,
+		db:      db,
+		service: s,
 	}
 
 	app.loadRoutes()
