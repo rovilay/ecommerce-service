@@ -43,7 +43,7 @@ func (h *ProductHandler) MiddlewareValidateProduct(next http.Handler) http.Handl
 	})
 }
 
-func (h *ProductHandler) MiddlewareValidateCategory(next http.Handler) http.Handler {
+func (h *CategoryHandler) MiddlewareValidateCategory(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c := &product.Category{}
 

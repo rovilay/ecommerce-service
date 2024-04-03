@@ -10,7 +10,7 @@ import (
 	"github.com/rovilay/ecommerce-service/domains/product"
 )
 
-func (h *ProductHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
 	categoryID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		h.log.Println("bad ID param: ", err)
@@ -35,7 +35,7 @@ func (h *ProductHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *ProductHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
 	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 	if err != nil {
 		h.log.Err(err)
@@ -61,7 +61,7 @@ func (h *ProductHandler) ListCategories(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (h *ProductHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value(CategoryCTXKey).(*product.Category)
 
 	newPrd, err := h.service.CreateCategory(r.Context(), data)
@@ -78,7 +78,7 @@ func (h *ProductHandler) CreateCategory(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (h *ProductHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	ctgryID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		h.log.Println("bad ID param: ", err)
@@ -105,7 +105,7 @@ func (h *ProductHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (h *ProductHandler) SearchCategories(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) SearchCategories(w http.ResponseWriter, r *http.Request) {
 	searchTerm := r.URL.Query().Get("q")
 	if searchTerm == "" {
 		http.Error(w, `{"error": "search term empty"}`, http.StatusBadGateway)
