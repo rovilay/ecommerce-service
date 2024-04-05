@@ -8,19 +8,20 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/rovilay/ecommerce-service/config"
 	"github.com/rovilay/ecommerce-service/domains/product"
 	"github.com/rs/zerolog"
 )
 
 type ProductApp struct {
 	router  http.Handler
-	config  Config
+	config  *config.ProductConfig
 	db      *sqlx.DB
 	log     *zerolog.Logger
 	service *product.Service
 }
 
-func NewProductApp(db *sqlx.DB, s *product.Service, c Config, log *zerolog.Logger) *ProductApp {
+func NewProductApp(db *sqlx.DB, s *product.Service, c *config.ProductConfig, log *zerolog.Logger) *ProductApp {
 	appLogger := log.With().Str("package", "productApp").Logger()
 
 	app := &ProductApp{

@@ -9,6 +9,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"github.com/rovilay/ecommerce-service/config"
 	"github.com/rovilay/ecommerce-service/domains/product"
 	productHttp "github.com/rovilay/ecommerce-service/internal/http/chi/product"
 	"github.com/rs/zerolog"
@@ -37,7 +38,7 @@ func main() {
 	}
 
 	// load config
-	c := productHttp.LoadConfig()
+	c := config.LoadProductConfig()
 
 	db, err := sqlx.Connect("pgx", c.DBURL)
 	if err != nil {
@@ -46,7 +47,7 @@ func main() {
 
 	postgresRepo := product.NewPostgresRepository(db, &logger)
 	productService := product.NewService(&postgresRepo)
-	app := productHttp.NewProductApp(db, productService, productHttp.LoadConfig(), &logger)
+	app := productHttp.NewProductApp(db, productService, &c, &logger)
 
 	if err = app.Start(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("failed to start app")

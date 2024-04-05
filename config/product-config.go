@@ -1,17 +1,17 @@
-package product
+package config
 
 import (
 	"os"
 	"strconv"
 )
 
-type Config struct {
+type ProductConfig struct {
 	ServerPort uint16
 	DBURL      string
 }
 
-func LoadConfig() Config {
-	cfg := Config{
+func LoadProductConfig() ProductConfig {
+	cfg := ProductConfig{
 		ServerPort: 3000,
 	}
 
