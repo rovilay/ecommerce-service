@@ -9,6 +9,10 @@ import (
 	"github.com/rovilay/ecommerce-service/domains/product"
 )
 
+type ProductServiceClient interface {
+	CheckProductExists(ctx context.Context, productID int) (bool, error)
+}
+
 type productServiceClient struct {
 	baseURL    string
 	httpClient *http.Client

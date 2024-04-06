@@ -3,6 +3,7 @@ package product
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
@@ -10,14 +11,20 @@ import (
 
 type postgresRepository struct {
 	db  *sqlx.DB
-	log *zerolog.Logger
+	log zerolog.Logger
 }
 
 var ErrNotExist = errors.New("resource does not exist")
 
-func NewPostgresRepository(db *sqlx.DB, log *zerolog.Logger) Repository {
+func NewPostgresRepository(ctx context.Context, db *sqlx.DB, log zerolog.Logger) *postgresRepository {
 	logger := log.With().Str("repository", "postgresRepository").Logger()
-	return &postgresRepository{db: db, log: &logger}
+
+	// ping db
+	if err := db.PingContext(ctx); err != nil {
+		logger.Fatal().Err(fmt.Errorf("failed to connect to postgres: %w", err)).Msg("something went wrong!")
+	}
+
+	return &postgresRepository{db: db, log: logger}
 }
 
 func (r *postgresRepository) GetProductByID(ctx context.Context, id int) (*Product, error) {
@@ -28,7 +35,7 @@ func (r *postgresRepository) GetProductByID(ctx context.Context, id int) (*Produ
 	`
 	err := r.db.GetContext(ctx, &product, query, id)
 	if err != nil {
-		r.log.Err(err).Str("method", "GetProductByID")
+		r.log.Err(err).Str("method", "GetProductByID").Msg(err.Error())
 		return nil, ErrNotExist
 	}
 	return &product, nil
@@ -43,7 +50,7 @@ func (r *postgresRepository) getProductByID(ctx context.Context, id int) (*Produ
 	`
 	err := r.db.GetContext(ctx, &product, query, id)
 	if err != nil {
-		r.log.Err(err).Str("method", "GetProductByID")
+		r.log.Err(err).Str("method", "GetProductByID").Msg(err.Error())
 		return nil, ErrNotExist
 	}
 	return &product, nil
@@ -106,7 +113,7 @@ func (r *postgresRepository) UpdateProduct(ctx context.Context, p *Product) (*Pr
 
 	up, err := r.GetProductByID(ctx, p.ID)
 	if err != nil {
-		r.log.Err(err).Str("method", "UpdateProduct")
+		r.log.Err(err).Str("method", "UpdateProduct").Msg(err.Error())
 		return nil, ErrNotExist
 	}
 
@@ -122,7 +129,7 @@ func (r *postgresRepository) GetProductsByCategory(ctx context.Context, category
 	var products []*Product
 	err := r.db.SelectContext(ctx, &products, query, categoryID)
 	if err != nil {
-		r.log.Err(err).Str("method", "GetProductsByCategory")
+		r.log.Err(err).Str("method", "GetProductsByCategory").Msg(err.Error())
 		return nil, ErrNotExist
 	}
 	return products, nil
@@ -137,7 +144,7 @@ func (r *postgresRepository) DeleteProduct(ctx context.Context, id int) error {
 
 	p, err := r.getProductByID(ctx, id)
 	if err != nil {
-		r.log.Err(err).Str("method", "DeleteProduct")
+		r.log.Err(err).Str("method", "DeleteProduct").Msg(err.Error())
 		return err
 	}
 
@@ -194,7 +201,7 @@ func (r *postgresRepository) GetCategoryByID(ctx context.Context, id int) (*Cate
 	`
 	err := r.db.GetContext(ctx, c, query, id)
 	if err != nil {
-		r.log.Err(err).Str("method", "GetCategoryByID")
+		r.log.Err(err).Str("method", "GetCategoryByID").Msg(err.Error())
 		return nil, ErrNotExist
 	}
 	return c, nil
@@ -252,7 +259,7 @@ func (r *postgresRepository) UpdateCategory(ctx context.Context, id int, name st
 
 	c, err := r.GetCategoryByID(ctx, id)
 	if err != nil {
-		r.log.Err(err).Str("method", "UpdateCategory")
+		r.log.Err(err).Str("method", "UpdateCategory").Msg(err.Error())
 		return nil, ErrNotExist
 	}
 

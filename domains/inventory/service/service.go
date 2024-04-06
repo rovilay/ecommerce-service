@@ -9,22 +9,18 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type ProductServiceClient interface {
-	CheckProductExists(ctx context.Context, productID int) (bool, error)
-}
-
 type InventoryService struct {
 	repo                 repository.InventoryRepository
-	productServiceClient ProductServiceClient
+	productServiceClient inventory.ProductServiceClient
 	log                  *zerolog.Logger
 }
 
-func NewInventoryService(repo *repository.InventoryRepository, psc *ProductServiceClient, l *zerolog.Logger) *InventoryService {
+func NewInventoryService(repo repository.InventoryRepository, psc inventory.ProductServiceClient, l *zerolog.Logger) *InventoryService {
 	logger := l.With().Str("repository", "postgresInventoryRepository").Logger()
 
 	return &InventoryService{
-		repo:                 *repo,
-		productServiceClient: *psc,
+		repo:                 repo,
+		productServiceClient: psc,
 		log:                  &logger,
 	}
 }
@@ -38,9 +34,7 @@ func (s *InventoryService) CreateInventoryItem(ctx context.Context, productID in
 
 	productExists, err := s.verifyProductExists(ctx, productID)
 	if !productExists || err != nil {
-		if err != nil {
-			log.Err(err)
-		}
+		log.Err(err)
 		return nil, inventory.ErrInvalidProduct
 	}
 	return s.repo.CreateInventoryItem(ctx, productID, uint(quantity))
@@ -60,19 +54,15 @@ func (s *InventoryService) CheckAvailability(ctx context.Context, productID int,
 		return true, nil
 	}
 
-	return false, inventory.ErrInsufficientStock
+	return false, nil
 }
 
 func (s *InventoryService) DecrementInventory(ctx context.Context, productID int, quantity uint) error {
-	err := s.repo.UpdateInventoryQuantity(ctx, productID, -int(quantity))
-
-	return err
+	return s.repo.UpdateInventoryQuantity(ctx, productID, -int(quantity))
 }
 
 func (s *InventoryService) IncrementInventory(ctx context.Context, productID int, quantity uint) error {
-	err := s.repo.UpdateInventoryQuantity(ctx, productID, int(quantity))
-
-	return err
+	return s.repo.UpdateInventoryQuantity(ctx, productID, int(quantity))
 }
 
 func (s *InventoryService) verifyProductExists(ctx context.Context, productID int) (bool, error) {

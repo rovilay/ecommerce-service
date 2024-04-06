@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"github.com/rovilay/ecommerce-service/domains/inventory"
 	"github.com/rovilay/ecommerce-service/domains/inventory/model"
 	"github.com/rs/zerolog"
@@ -18,8 +18,13 @@ type postgresInventoryRepository struct {
 	log *zerolog.Logger
 }
 
-func NewPostgresInventoryRepository(db *sqlx.DB, log *zerolog.Logger) *postgresInventoryRepository {
+func NewPostgresInventoryRepository(ctx context.Context, db *sqlx.DB, log *zerolog.Logger) *postgresInventoryRepository {
 	repoLogger := log.With().Str("repository", "postgresInventoryRepository").Logger()
+
+	// ping db
+	if err := db.PingContext(ctx); err != nil {
+		repoLogger.Fatal().Err(fmt.Errorf("failed to connect to postgres: %w", err))
+	}
 
 	return &postgresInventoryRepository{
 		db:  db,
@@ -31,7 +36,7 @@ func (r *postgresInventoryRepository) CreateInventoryItem(ctx context.Context, p
 	log := r.log.With().Str("method", "CreateInventoryItem").Logger()
 
 	var ivn model.InventoryItem
-	query := `INSERT INTO inventory_items (id, product_id, quantity)
+	query := `INSERT INTO inventory_items (product_id, quantity)
 		values ($1, $2)
 		RETURNING id, product_id, quantity
 	`
@@ -88,15 +93,21 @@ func (r *postgresInventoryRepository) UpdateInventoryQuantity(ctx context.Contex
 		return inventory.ErrNotFound
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return r.mapDatabaseError(err, &log)
+	}
+
+	return nil
 }
 
 func (r *postgresInventoryRepository) mapDatabaseError(err error, log *zerolog.Logger) error {
-	log.Err(err)
+	log.Err(err).Msg("Database operation failed!")
 
-	if errors.Is(err, sql.ErrNoRows) {
-		return inventory.ErrNotFound
-	} else if pqErr, ok := err.(*pq.Error); ok {
+	var pqErr *pgconn.PgError
+	if ok := errors.As(err, &pqErr); ok {
+		log.Debug().Msg(fmt.Sprintf("%v:%v", ok, pqErr.SQLState()))
+
 		switch pqErr.Code {
 		case "23505": // Unique constraint violation
 			return inventory.ErrDuplicateEntry
@@ -105,6 +116,8 @@ func (r *postgresInventoryRepository) mapDatabaseError(err error, log *zerolog.L
 		default:
 			return fmt.Errorf("database error (%s): %w", pqErr.Code, err)
 		}
+	} else if errors.Is(err, sql.ErrNoRows) {
+		return inventory.ErrNotFound
 	} else {
 		return fmt.Errorf("database error: %w", err)
 	}

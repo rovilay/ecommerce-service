@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/rovilay/ecommerce-service/config"
@@ -17,7 +18,7 @@ import (
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	logger := zerolog.New(os.Stderr).With().Str("component", "main").Timestamp().Logger()
+	logger := zerolog.New(os.Stderr).With().Str("component", "product-service:main").Timestamp().Logger()
 
 	// notify context of os.Interrupt signal
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -28,7 +29,7 @@ func main() {
 
 	envPath, err := filepath.Abs("./config/.env")
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Error loading .env file")
+		logger.Fatal().Err(err).Msg("Error resolving .env path")
 	}
 
 	// Load .env file from the current directory
@@ -40,14 +41,20 @@ func main() {
 	// load config
 	c := config.LoadProductConfig()
 
+	// connect to DB
 	db, err := sqlx.Connect("pgx", c.DBURL)
 	if err != nil {
 		logger.Fatal().Err(err).Msg(fmt.Sprintf("failed to connect to DB %s", c.DBURL))
 	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Err(err).Msg("failed to close postgres")
+		}
+	}()
 
-	postgresRepo := product.NewPostgresRepository(db, &logger)
-	productService := product.NewService(&postgresRepo)
-	app := productHttp.NewProductApp(db, productService, &c, &logger)
+	postgresRepo := product.NewPostgresRepository(ctx, db, logger)
+	productService := product.NewService(postgresRepo)
+	app := productHttp.NewProductApp(productService, &c, &logger)
 
 	if err = app.Start(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("failed to start app")

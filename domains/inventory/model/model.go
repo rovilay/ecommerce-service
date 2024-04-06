@@ -9,8 +9,8 @@ import (
 
 type InventoryItem struct {
 	ID        int `json:"id"`
-	ProductID int `json:"product_id" validate:"required"`
-	Quantity  int `json:"quantity" validate:"required"`
+	ProductID int `json:"product_id" db:"product_id" validate:"required"`
+	Quantity  int `json:"quantity" db:"quantity" validate:"min=0,required"`
 }
 
 func (i *InventoryItem) ToJSON(w io.Writer) error {
