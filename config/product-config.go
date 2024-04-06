@@ -1,17 +1,17 @@
-package product
+package config
 
 import (
 	"os"
 	"strconv"
 )
 
-type Config struct {
+type ProductConfig struct {
 	ServerPort uint16
 	DBURL      string
 }
 
-func LoadConfig() Config {
-	cfg := Config{
+func LoadProductConfig() ProductConfig {
+	cfg := ProductConfig{
 		ServerPort: 3000,
 	}
 
@@ -21,9 +21,7 @@ func LoadConfig() Config {
 		}
 	}
 
-	if url, exists := os.LookupEnv("PRODUCT_DB_URL"); exists {
-		cfg.DBURL = url
-	} else if url, exists = os.LookupEnv("DB_URL"); exists {
+	if url, exists := os.LookupEnv("DB_URL"); exists {
 		cfg.DBURL = url
 	}
 

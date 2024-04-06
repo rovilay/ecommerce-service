@@ -11,35 +11,36 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/rovilay/ecommerce-service/config"
-	"github.com/rovilay/ecommerce-service/domains/product"
-	productHttp "github.com/rovilay/ecommerce-service/internal/http/chi/product"
+	"github.com/rovilay/ecommerce-service/domains/inventory/repository"
+	"github.com/rovilay/ecommerce-service/domains/inventory/service"
+	inventoryHttp "github.com/rovilay/ecommerce-service/internal/http/chi/inventory"
 	"github.com/rs/zerolog"
 )
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	logger := zerolog.New(os.Stderr).With().Str("component", "product-service:main").Timestamp().Logger()
+	logger := zerolog.New(os.Stdout).With().Str("component", "inventory-service:main").Timestamp().Logger()
 
 	// notify context of os.Interrupt signal
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	// attach logger to context
+	// add context to logger
 	ctx = logger.WithContext(ctx)
 
+	// load env
 	envPath, err := filepath.Abs("./config/.env")
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error resolving .env path")
 	}
 
-	// Load .env file from the current directory
 	err = godotenv.Load(envPath)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error loading .env file")
 	}
 
-	// load config
-	c := config.LoadProductConfig()
+	// load the config
+	c := config.LoadInventoryConfig()
 
 	// connect to DB
 	db, err := sqlx.Connect("pgx", c.DBURL)
@@ -52,9 +53,9 @@ func main() {
 		}
 	}()
 
-	postgresRepo := product.NewPostgresRepository(ctx, db, logger)
-	productService := product.NewService(postgresRepo)
-	app := productHttp.NewProductApp(productService, &c, &logger)
+	repo := repository.NewPostgresInventoryRepository(ctx, db, &logger)
+	service := service.NewInventoryService(repo, &logger)
+	app := inventoryHttp.NewInventoryApp(service, &c, &logger)
 
 	if err = app.Start(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("failed to start app")
