@@ -10,18 +10,16 @@ import (
 )
 
 type InventoryService struct {
-	repo                 repository.InventoryRepository
-	productServiceClient inventory.ProductServiceClient
-	log                  *zerolog.Logger
+	repo repository.InventoryRepository
+	log  *zerolog.Logger
 }
 
-func NewInventoryService(repo repository.InventoryRepository, psc inventory.ProductServiceClient, l *zerolog.Logger) *InventoryService {
+func NewInventoryService(repo repository.InventoryRepository, l *zerolog.Logger) *InventoryService {
 	logger := l.With().Str("repository", "postgresInventoryRepository").Logger()
 
 	return &InventoryService{
-		repo:                 repo,
-		productServiceClient: psc,
-		log:                  &logger,
+		repo: repo,
+		log:  &logger,
 	}
 }
 
@@ -63,8 +61,4 @@ func (s *InventoryService) DecrementInventory(ctx context.Context, productID int
 
 func (s *InventoryService) IncrementInventory(ctx context.Context, productID int, quantity uint) error {
 	return s.repo.UpdateInventoryQuantity(ctx, productID, int(quantity))
-}
-
-func (s *InventoryService) verifyProductExists(ctx context.Context, productID int) (bool, error) {
-	return s.productServiceClient.CheckProductExists(ctx, productID)
 }

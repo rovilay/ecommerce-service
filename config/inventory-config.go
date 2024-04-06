@@ -1,15 +1,13 @@
 package config
 
 import (
-	"log"
 	"os"
 	"strconv"
 )
 
 type InventoryConfig struct {
-	ProductBaseUrl string
-	ServerPort     uint16
-	DBURL          string
+	ServerPort uint16
+	DBURL      string
 }
 
 func LoadInventoryConfig() InventoryConfig {
@@ -25,14 +23,6 @@ func LoadInventoryConfig() InventoryConfig {
 
 	if url, exists := os.LookupEnv("DB_URL"); exists {
 		cfg.DBURL = url
-	}
-
-	url, exists := os.LookupEnv("PRODUCT_BASE_URL")
-
-	if exists {
-		cfg.ProductBaseUrl = url
-	} else {
-		log.Fatal("ProductBaseUrl required for this service")
 	}
 
 	return cfg

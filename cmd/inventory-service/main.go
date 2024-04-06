@@ -11,7 +11,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/rovilay/ecommerce-service/config"
-	"github.com/rovilay/ecommerce-service/domains/inventory"
 	"github.com/rovilay/ecommerce-service/domains/inventory/repository"
 	"github.com/rovilay/ecommerce-service/domains/inventory/service"
 	inventoryHttp "github.com/rovilay/ecommerce-service/internal/http/chi/inventory"
@@ -55,8 +54,7 @@ func main() {
 	}()
 
 	repo := repository.NewPostgresInventoryRepository(ctx, db, &logger)
-	psc := inventory.NewProductServiceClient(c.ProductBaseUrl)
-	service := service.NewInventoryService(repo, psc, &logger)
+	service := service.NewInventoryService(repo, &logger)
 	app := inventoryHttp.NewInventoryApp(service, &c, &logger)
 
 	if err = app.Start(ctx); err != nil {

@@ -38,17 +38,6 @@ func (a *InventoryApp) Start(ctx context.Context) error {
 		Handler: a.router,
 	}
 
-	// // ping db
-	// if err := a.db.PingContext(ctx); err != nil {
-	// 	return fmt.Errorf("failed to connect to postgres: %w", err)
-	// }
-
-	// defer func() {
-	// 	if err := a.db.Close(); err != nil {
-	// 		a.log.Err(err).Msg("failed to close postgres")
-	// 	}
-	// }()
-
 	a.log.Println("Starting Server on port: ", server.Addr)
 
 	ch := make(chan error, 1)
