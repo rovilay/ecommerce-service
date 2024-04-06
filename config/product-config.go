@@ -21,9 +21,7 @@ func LoadProductConfig() ProductConfig {
 		}
 	}
 
-	if url, exists := os.LookupEnv("PRODUCT_DB_URL"); exists {
-		cfg.DBURL = url
-	} else if url, exists = os.LookupEnv("DB_URL"); exists {
+	if url, exists := os.LookupEnv("DB_URL"); exists {
 		cfg.DBURL = url
 	}
 

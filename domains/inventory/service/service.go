@@ -26,17 +26,17 @@ func NewInventoryService(repo repository.InventoryRepository, psc inventory.Prod
 }
 
 func (s *InventoryService) CreateInventoryItem(ctx context.Context, productID int, quantity int) (*model.InventoryItem, error) {
-	log := s.log.With().Str("method", "CreateInventoryItem").Logger()
+	// log := s.log.With().Str("method", "CreateInventoryItem").Logger()
 
 	if quantity < 0 {
 		return nil, inventory.ErrInvalidQuantity
 	}
 
-	productExists, err := s.verifyProductExists(ctx, productID)
-	if !productExists || err != nil {
-		log.Err(err)
-		return nil, inventory.ErrInvalidProduct
-	}
+	// productExists, err := s.verifyProductExists(ctx, productID)
+	// if !productExists || err != nil {
+	// 	log.Err(err)
+	// 	return nil, inventory.ErrInvalidProduct
+	// }
 	return s.repo.CreateInventoryItem(ctx, productID, uint(quantity))
 }
 

@@ -44,6 +44,8 @@ func (h *InventoryHandler) CreateInventory(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
+
 	if err := newInv.ToJSON(w); err != nil {
 		h.sendError(w, err, "failed to marshal", 0, &log)
 		return
@@ -183,7 +185,8 @@ func (h *InventoryHandler) sendError(w http.ResponseWriter, err error, errMsg st
 	errRes := fmt.Sprintf(`{"error": "%v"}`, errMsg)
 
 	if errors.Is(err, inventory.ErrInvalidProduct) || errors.Is(err, inventory.ErrInsufficientStock) ||
-		errors.Is(err, inventory.ErrInvalidQuantity) || errors.Is(err, inventory.ErrDuplicateEntry) {
+		errors.Is(err, inventory.ErrInvalidQuantity) || errors.Is(err, inventory.ErrDuplicateEntry) ||
+		errors.Is(err, inventory.ErrForeignKeyViolation) {
 		http.Error(w, errRes, http.StatusBadRequest)
 		return
 	} else if errors.Is(err, inventory.ErrNotFound) {

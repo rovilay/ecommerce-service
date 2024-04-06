@@ -23,9 +23,7 @@ func LoadInventoryConfig() InventoryConfig {
 		}
 	}
 
-	if url, exists := os.LookupEnv("INVENTORY_DB_URL"); exists {
-		cfg.DBURL = url
-	} else if url, exists = os.LookupEnv("DB_URL"); exists {
+	if url, exists := os.LookupEnv("DB_URL"); exists {
 		cfg.DBURL = url
 	}
 
