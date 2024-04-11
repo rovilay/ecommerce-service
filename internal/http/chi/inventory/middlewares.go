@@ -29,7 +29,7 @@ func (h *InventoryHandler) MiddlewareValidateInventory(next http.Handler) http.H
 		if err != nil {
 			h.log.Println("[ERROR] validating inventory", err)
 			http.Error(
-				w, fmt.Sprintf(`{"error": "Error valdating inventory: %s"}`, err),
+				w, fmt.Sprintf(`{"error": "Error validating inventory: %s"}`, err),
 				http.StatusBadRequest,
 			)
 			return

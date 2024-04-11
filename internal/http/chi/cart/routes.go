@@ -1,4 +1,4 @@
-package inventory
+package cart
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/rs/cors"
 )
 
-func (a *InventoryApp) loadRoutes() {
+func (a *CartApp) loadRoutes() {
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
@@ -20,7 +20,7 @@ func (a *InventoryApp) loadRoutes() {
 			Message string `json:"message"`
 		}
 
-		res.Message = "Welcome to inventory service"
+		res.Message = "Welcome to cart service"
 
 		msg, err := json.Marshal(res)
 		if err != nil {
@@ -33,7 +33,7 @@ func (a *InventoryApp) loadRoutes() {
 		w.Write(msg)
 	})
 
-	router.Route("/inventory", a.loadInventoryRoutes)
+	router.Route("/cart", a.loadCartRoutes)
 
 	// CORS configuration
 	corsRouter := cors.Default().Handler(router)
@@ -41,17 +41,21 @@ func (a *InventoryApp) loadRoutes() {
 	a.router = corsRouter
 }
 
-func (a *InventoryApp) loadInventoryRoutes(router chi.Router) {
-	h := NewInventoryHandler(a.service, a.log)
-
-	router.Get("/products/{id}", h.GetInventory)
-	router.Get("/products/{id}/available", h.CheckAvailability)
+func (a *CartApp) loadCartRoutes(router chi.Router) {
+	h := NewCartHandler(a.service, a.log)
 
 	router.Group(func(r chi.Router) {
-		r.Use(h.MiddlewareValidateInventory)
-		r.Post("/", h.CreateInventory)
+		r.Use(h.MiddlewareValidateCartItem)
+		r.Get("/", h.GetCart)
+
+		r.Group(func(r chi.Router) {
+			r.Use(h.MiddlewareValidateCartItem)
+			r.Post("/", h.AddItem)
+			r.Put("/items/{id}", h.UpdateCartItemQuantity)
+		})
+
+		r.Put("/items/{id}", h.RemoveItem)
+		r.Delete("/", h.ClearCart)
 	})
 
-	router.Put("/products/{id}/increase", h.IncrementInventory)
-	router.Put("/products/{id}/decrease", h.DecrementInventory)
 }
