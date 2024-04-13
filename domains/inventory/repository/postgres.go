@@ -102,7 +102,7 @@ func (r *postgresInventoryRepository) UpdateInventoryQuantity(ctx context.Contex
 }
 
 func (r *postgresInventoryRepository) mapDatabaseError(err error, log *zerolog.Logger) error {
-	log.Err(err).Msg("Database operation failed!")
+	log.Err(err).Msg("database operation failed!")
 
 	var pqErr *pgconn.PgError
 	if ok := errors.As(err, &pqErr); ok {

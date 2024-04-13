@@ -1,4 +1,4 @@
-package inventory
+package cart
 
 import (
 	"context"
@@ -7,21 +7,21 @@ import (
 	"time"
 
 	"github.com/rovilay/ecommerce-service/config"
-	"github.com/rovilay/ecommerce-service/domains/inventory/service"
+	"github.com/rovilay/ecommerce-service/domains/cart/service"
 	"github.com/rs/zerolog"
 )
 
-type InventoryApp struct {
+type CartApp struct {
 	router  http.Handler
-	config  *config.InventoryConfig
+	config  *config.CartConfig
 	log     *zerolog.Logger
-	service *service.InventoryService
+	service *service.CartService
 }
 
-func NewInventoryApp(s *service.InventoryService, c *config.InventoryConfig, log *zerolog.Logger) *InventoryApp {
-	logger := log.With().Str("package:inventory", "InventoryApp").Logger()
+func NewCartApp(s *service.CartService, c *config.CartConfig, log *zerolog.Logger) *CartApp {
+	logger := log.With().Str("package:cart", "CartApp").Logger()
 
-	app := &InventoryApp{
+	app := &CartApp{
 		log:     &logger,
 		config:  c,
 		service: s,
@@ -32,7 +32,7 @@ func NewInventoryApp(s *service.InventoryService, c *config.InventoryConfig, log
 	return app
 }
 
-func (a *InventoryApp) Start(ctx context.Context) error {
+func (a *CartApp) Start(ctx context.Context) error {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", a.config.ServerPort),
 		Handler: a.router,

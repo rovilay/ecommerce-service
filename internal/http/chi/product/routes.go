@@ -18,7 +18,7 @@ func (a *ProductApp) loadRoutes() {
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		var res struct {
-			Message string
+			Message string `json:"message"`
 		}
 
 		res.Message = "Welcome to product service"

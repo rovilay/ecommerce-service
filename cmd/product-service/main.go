@@ -27,7 +27,7 @@ func main() {
 	// attach logger to context
 	ctx = logger.WithContext(ctx)
 
-	envPath, err := filepath.Abs("./config/.env")
+	envPath, err := filepath.Abs("./.env")
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error resolving .env path")
 	}

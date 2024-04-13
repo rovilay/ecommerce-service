@@ -1,0 +1,2 @@
+DROP TABLE IF EXITS cart_items;
+DROP TABLE IF EXITS carts;
