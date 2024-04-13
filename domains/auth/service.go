@@ -13,18 +13,13 @@ type AuthService interface {
 }
 
 type authService struct {
-	// baseURL    string
-	// client     *http.Client
 	authSecret []byte
 	cache      *redis.Client
 	expiration time.Duration
-	// log        *zerolog.Logger
 }
 
 func NewAuthService(r *redis.Client, jwtSecret string, tokenExpiration time.Duration) *authService {
 	return &authService{
-		// baseURL:    baseURL,
-		// client:     &http.Client{},
 		authSecret: []byte(jwtSecret),
 		cache:      r,
 		expiration: tokenExpiration,
@@ -53,8 +48,3 @@ func (a *authService) ValidateJWT(ctx context.Context, token string) (string, er
 	}
 	return userID, nil
 }
-
-// func (a *authService) fetchUser(ctx context.Context, token string) (*User, error) {
-// 	var user User
-// 	url :=
-// }

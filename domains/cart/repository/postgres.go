@@ -53,6 +53,7 @@ func (r *postgresCartRepository) GetCartByUserID(ctx context.Context, userID str
 		if err := rows.Scan(&cart.ID, &cart.UserID, &item.ID, &item.ProductID, &item.Quantity); err != nil {
 			return nil, r.mapDatabaseError(err, &log)
 		}
+		item.CartID = cart.ID
 		cart.CartItems = append(cart.CartItems, item)
 	}
 
@@ -68,24 +69,25 @@ func (r *postgresCartRepository) AddItemToCart(ctx context.Context, userID strin
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, r.mapDatabaseError(sql.ErrNoRows, &log)
+		return nil, r.mapDatabaseError(err, &log)
 	}
 	defer tx.Rollback()
 
+	var cart models.Cart
 	var item models.CartItem
 
 	// 1. Get or Create Cart
-	var cartID int
 	query1 := `
-	INSERT INTO carts (user_id) 
-	VALUES ($1) 
-	ON CONFLICT (user_id) DO UPDATE
-		SET updated_at = now()
-	RETURNING id`
+		INSERT INTO carts (user_id) 
+		VALUES ($1) 
+		ON CONFLICT (user_id) DO UPDATE
+			SET updated_at = now()
+		RETURNING id
+	`
 
-	err = tx.QueryRowContext(ctx, query1, userID).Scan(&cartID)
+	err = tx.QueryRowContext(ctx, query1, userID).Scan(&cart.ID)
 	if err != nil {
-		return nil, r.mapDatabaseError(sql.ErrNoRows, &log)
+		return nil, r.mapDatabaseError(err, &log)
 	}
 
 	// 2. Check for Existing Item
@@ -94,24 +96,34 @@ func (r *postgresCartRepository) AddItemToCart(ctx context.Context, userID strin
 	SELECT quantity FROM cart_items 
 	WHERE cart_id = $1 AND product_id = $2`
 
-	err = tx.QueryRowContext(ctx, query2, cartID, productID).Scan(&existingQuantity)
+	err = tx.QueryRowContext(ctx, query2, cart.ID, productID).Scan(&existingQuantity)
 
 	// 3. Insert or Update Based on Existence
 	if err != nil && err != sql.ErrNoRows {
-		return nil, r.mapDatabaseError(sql.ErrNoRows, &log)
+		return nil, r.mapDatabaseError(err, &log)
 	} else if err == sql.ErrNoRows {
+		if quantity < 0 {
+			quantity = 0
+		}
+
 		query3 := `
-		INSERT INTO cart_items (cart_id, product_id, quantity)
-		VALUES ($1, $2, $3)`
-		err = tx.QueryRowContext(ctx, query3, cartID, productID, quantity).Scan(&item)
+			INSERT INTO cart_items (cart_id, product_id, quantity)
+			VALUES ($1, $2, $3)
+			RETURNING id, cart_id, product_id, quantity
+		`
+		err = tx.QueryRowContext(ctx, query3, cart.ID, productID, quantity).
+			Scan(&item.ID, &item.CartID, &item.ProductID, &item.Quantity)
 	} else {
 		query4 := `
-		UPDATE cart_items SET quantity = quantity + $1 
-		WHERE cart_id = $2 AND product_id = $3`
-		err = tx.QueryRowContext(ctx, query4, quantity, cartID, productID).Scan(&item)
+			UPDATE cart_items SET quantity = quantity + $1 
+			WHERE cart_id = $2 AND product_id = $3
+			RETURNING id, cart_id, product_id, quantity
+		`
+		err = tx.QueryRowContext(ctx, query4, quantity, cart.ID, productID).
+			Scan(&item.ID, &item.CartID, &item.ProductID, &item.Quantity)
 	}
 	if err != nil {
-		return nil, r.mapDatabaseError(sql.ErrNoRows, &log)
+		return nil, r.mapDatabaseError(err, &log)
 	}
 
 	err = tx.Commit()

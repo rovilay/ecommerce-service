@@ -45,17 +45,16 @@ func (a *CartApp) loadCartRoutes(router chi.Router) {
 	h := NewCartHandler(a.service, a.log)
 
 	router.Group(func(r chi.Router) {
-		r.Use(h.MiddlewareValidateCartItem)
+		r.Use(h.MiddlewareAuth)
 		r.Get("/", h.GetCart)
-
-		r.Group(func(r chi.Router) {
-			r.Use(h.MiddlewareValidateCartItem)
-			r.Post("/", h.AddItem)
-			r.Put("/items/{id}", h.UpdateCartItemQuantity)
-		})
-
-		r.Put("/items/{id}", h.RemoveItem)
+		r.Delete("/items/{id}", h.RemoveItem)
 		r.Delete("/", h.ClearCart)
 	})
 
+	router.Group(func(r chi.Router) {
+		r.Use(h.MiddlewareAuth)
+		r.Use(h.MiddlewareValidateCartItem)
+		r.Post("/", h.AddItem)
+		r.Put("/items/{id}", h.UpdateCartItemQuantity)
+	})
 }

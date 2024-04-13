@@ -56,18 +56,17 @@ A ecommerce service that focuses on product management and order processing.
 * **GET /categories/search**
    * Search categories by name
 
-* **Admin-Level Endpoints (Authentication/Authorization Required)**
-   * **POST /products** - Create a new product
-   * **PUT /products/{id}** - Update an existing product
-   * **DELETE /products/{id}** - Delete a product
-   * **POST /categories** - Create a new category
-   * **PUT /categories/{id}** - Update an existing category
+* **POST /products** - Create a new product
+* **PUT /products/{id}** - Update an existing product
+* **DELETE /products/{id}** - Delete a product
+* **POST /categories** - Create a new category
+* **PUT /categories/{id}** - Update an existing category
+
 ### **Inventory Management Service**
 
 **Purpose**
 
 * Tracks stock levels for each product.
-* Manages reservations/holds when a product is added to a cart.
 * Decrements stock upon successful order placement.
 
 **Entities**
@@ -76,14 +75,6 @@ A ecommerce service that focuses on product management and order processing.
     * id (integer, primary key)
     * product_id (integer, foreign key reference to Product)
     * quantity (integer)
-    * available_quantity (integer - potentially derived from quantity and holds)
-
-* **InventoryHold** (Might be optional, depending on how you manage holds)
-    * id (integer, primary key)
-    * product_id (integer, foreign key reference to Product)
-    * quantity (integer)
-    * cart_id (integer, foreign key reference to the Cart service) 
-    * expiration_time (timestamp)
 
 **API Endpoints**
 
@@ -97,8 +88,41 @@ A ecommerce service that focuses on product management and order processing.
 * **PUT /inventory/{product_id}/decrement**
     * Decrements the stock level for a product, usually triggered after order placement.
 
-*  **Admin-Level Endpoints (Authentication/Authorization Required)**
-    * **PUT /inventory/{product_id}/adjust** - Adjust stock levels (add or remove).
+
+### **Cart Service**
+
+**Purpose**
+Manages cart
+
+**Entities**
+
+* **Cart**
+    * id (integer, primary key)
+    * user_id (UUID, user id)
+    * created_at (timestamp)
+    * updated_at (timestamp)
+* **CartItem**
+    * id (integer, primary key)
+    * cart_id (integer, foreign key reference to Cart)
+    * product_id (integer, foreign key reference to Product)
+    * quantity (integer)
+
+**API Endpoints**
+
+* **GET /cart**
+    * Retrieve user's cart
+
+* **POST /cart**
+    * Add products to cart
+
+* **DELETE /cart**
+    * Clears user's cart
+
+* **PUT /cart/items/{id}**
+    * updates cart items quantity
+
+* **DELETE /cart/items/{id}**
+    * Removes item from cart
 
 
 ## [Project Structure]()

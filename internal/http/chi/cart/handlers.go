@@ -156,7 +156,7 @@ func (h *CartHandler) sendError(w http.ResponseWriter, err error, errMsg string,
 	} else if errors.Is(err, cart.ErrInvalidJWToken) {
 		http.Error(w, errRes, http.StatusUnauthorized)
 		return
-	} else if errors.Is(err, cart.ErrNotFound) {
+	} else if errors.Is(err, cart.ErrNotFound) || errors.Is(err, cart.ErrItemNotFound) {
 		http.Error(w, errRes, http.StatusNotFound)
 		return
 	} else if err != nil {
