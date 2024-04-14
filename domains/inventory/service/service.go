@@ -15,7 +15,7 @@ type InventoryService struct {
 }
 
 func NewInventoryService(repo repository.InventoryRepository, l *zerolog.Logger) *InventoryService {
-	logger := l.With().Str("repository", "postgresInventoryRepository").Logger()
+	logger := l.With().Str("service", "InventoryService").Logger()
 
 	return &InventoryService{
 		repo: repo,
@@ -24,17 +24,10 @@ func NewInventoryService(repo repository.InventoryRepository, l *zerolog.Logger)
 }
 
 func (s *InventoryService) CreateInventoryItem(ctx context.Context, productID int, quantity int) (*model.InventoryItem, error) {
-	// log := s.log.With().Str("method", "CreateInventoryItem").Logger()
-
 	if quantity < 0 {
 		return nil, inventory.ErrInvalidQuantity
 	}
 
-	// productExists, err := s.verifyProductExists(ctx, productID)
-	// if !productExists || err != nil {
-	// 	log.Err(err)
-	// 	return nil, inventory.ErrInvalidProduct
-	// }
 	return s.repo.CreateInventoryItem(ctx, productID, uint(quantity))
 }
 
