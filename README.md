@@ -124,8 +124,38 @@ Manages cart
 * **DELETE /cart/items/{id}**
     * Removes item from cart
 
+### **Order Service**
 
-## [Project Structure]()
+**Purpose**
+Manages order
 
+**Entities**
 
+* **Order**
+    * id (integer, primary key)
+    * user_id (UUID, user id)
+    * status ("pending", "processing", "shipped", "cancelled", "refunded")
+    * total_price (float)
+    * order_items ([]OrderItem)
+    * created_at (timestamp)
+    * updated_at (timestamp)
+* **OrderItem**
+    * id (integer, primary key)
+    * order_id (integer, foreign key reference to Order)
+    * product_id (integer, foreign key reference to Product)
+    * quantity (integer)
+    * price (float)
 
+**API Endpoints**
+
+* **GET /orders**
+    * Retrieve user's orders
+
+* **GET /orders/{id}**
+    * Retrieve order
+
+* **POST /orders**
+    * Creates order
+
+* **PUT /orders/{id}/status**
+    * updates order status
