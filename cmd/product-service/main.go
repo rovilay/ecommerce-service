@@ -35,11 +35,14 @@ func main() {
 	// Load .env file from the current directory
 	err = godotenv.Load(envPath)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Error loading .env file")
+		// logger.Fatal().Err(err).Msg("Error loading .env file")
+		logger.Err(err).Msg("error loading .env file")
 	}
 
 	// load config
 	c := config.LoadProductConfig()
+
+	// logger.Info().Msg(c.DBURL)
 
 	// connect to DB
 	db, err := sqlx.Connect("pgx", c.DBURL)
