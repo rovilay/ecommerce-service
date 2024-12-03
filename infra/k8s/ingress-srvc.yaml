@@ -10,10 +10,24 @@ spec:
     - host: rovi-ecommerce.dev
       http:
         paths:
-          - path: /?(.*)
+          - path: /api/v1/products/?(.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: product-srvc
+                port:
+                  number: 3001
+          - path: /api/v1/categories/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: product-srvc
+                port:
+                  number: 3001
+          - path: /api/v1/inventory/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: inventory-srvc
                 port:
                   number: 3001

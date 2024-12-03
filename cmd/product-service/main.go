@@ -42,8 +42,6 @@ func main() {
 	// load config
 	c := config.LoadProductConfig()
 
-	// logger.Info().Msg(c.DBURL)
-
 	// connect to DB
 	db, err := sqlx.Connect("pgx", c.DBURL)
 	if err != nil {

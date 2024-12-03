@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-depl
+  name: inventory-depl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: product
+      app: inventory
   template:
     metadata:
       labels:
-        app: product
+        app: inventory
     spec:
       initContainers:
         - name: init-migration
@@ -46,10 +46,10 @@ spec:
             # Run database migrations
             ./bin/migration
       containers:
-        - name: product
-          image: rovilay/ecommerce-product-service:latest
+        - name: inventory
+          image: rovilay/ecommerce-inventory-service:latest
           env:
-            - name: PRODUCT_SERVER_PORT
+            - name: INVENTORY_SERVER_PORT
               value: '3001'
             - name: POSTGRES_USER
               valueFrom:
@@ -82,13 +82,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: product-srvc
+  name: inventory-srvc
 spec:
   type: ClusterIP
   selector:
-    app: product
+    app: inventory
   ports:
-    - name: product
+    - name: inventory
       protocol: TCP
       port: 3001
       targetPort: 3001

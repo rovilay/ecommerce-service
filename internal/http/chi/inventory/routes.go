@@ -33,7 +33,7 @@ func (a *InventoryApp) loadRoutes() {
 		w.Write(msg)
 	})
 
-	router.Route("/inventory", a.loadInventoryRoutes)
+	router.Route("/api/v1/inventory", a.loadInventoryRoutes)
 
 	// CORS configuration
 	corsRouter := cors.Default().Handler(router)

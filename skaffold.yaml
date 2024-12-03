@@ -5,6 +5,7 @@ deploy:
     manifests:
       - infra/k8s/db-postgres-depl.yaml 
       - infra/k8s/product-depl.yaml
+      - infra/k8s/inventory-depl.yaml
       - infra/k8s/ingress-srvc.yaml
 build:
   local:
@@ -23,4 +24,18 @@ build:
           - src: 'domains/product/*.go'
             dest: '.' 
           - src: 'config/product-config/*.go'
+            dest: '.'
+    - image: rovilay/ecommerce-inventory-service
+      context: ./
+      docker:
+        dockerfile: ./cmd/inventory-service/Dockerfile
+      sync:
+        manual:
+          - src: 'domains/inventory/*.go'
+            dest: '.' 
+          - src: 'internal/http/chi/inventory/*.go'
+            dest: '.'
+          - src: 'domains/inventory/*.go'
+            dest: '.' 
+          - src: 'config/inventory-config/*.go'
             dest: '.'
