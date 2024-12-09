@@ -6,6 +6,7 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 
+COPY ./common ./common/
 COPY ./config/product-config.go ./config/
 COPY ./domains/product ./domains/product/
 COPY ./internal/http/chi/product ./internal/http/chi/product/

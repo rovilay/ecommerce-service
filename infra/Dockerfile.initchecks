@@ -1,0 +1,19 @@
+FROM golang:1.22.1 AS build
+
+WORKDIR /app
+
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download
+
+COPY ./infra/init-checks.go ./init-checks.go
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/main ./init-checks.go
+
+FROM ubuntu:latest
+
+COPY --from=build /bin/main /bin/main
+
+RUN apt-get update && \
+    apt-get install -y iputils-ping && \
+    rm -rf /var/lib/apt/lists/*

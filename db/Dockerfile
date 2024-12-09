@@ -17,7 +17,7 @@ FROM debian:stable-slim
 COPY ./db/migrations ./db/migrations
 COPY --from=build /bin/migration /bin/migration
 
-# Install the postgresql-client package, which includes pg_isready
+# Install the postgresql-client and rabbitmq-management packages, which includes pg_isready, rabbitmqctl
 RUN apt-get update && \
     apt-get install -y postgresql-client && \
     rm -rf /var/lib/apt/lists/*

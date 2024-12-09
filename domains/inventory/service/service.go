@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/rovilay/ecommerce-service/common/events"
 	"github.com/rovilay/ecommerce-service/domains/inventory"
 	"github.com/rovilay/ecommerce-service/domains/inventory/model"
 	"github.com/rovilay/ecommerce-service/domains/inventory/repository"
@@ -10,17 +11,45 @@ import (
 )
 
 type InventoryService struct {
-	repo repository.InventoryRepository
-	log  *zerolog.Logger
+	repo      repository.InventoryRepository
+	msgBroker *events.RabbitClient
+	log       *zerolog.Logger
 }
 
-func NewInventoryService(repo repository.InventoryRepository, l *zerolog.Logger) *InventoryService {
+func NewInventoryService(repo repository.InventoryRepository, b *events.RabbitClient, l *zerolog.Logger) (*InventoryService, error) {
 	logger := l.With().Str("service", "InventoryService").Logger()
 
-	return &InventoryService{
-		repo: repo,
-		log:  &logger,
+	s := &InventoryService{
+		repo:      repo,
+		msgBroker: b,
+		log:       &logger,
 	}
+
+	err := s.setupListeners()
+	if err != nil {
+		return nil, err
+	}
+
+	return s, err
+}
+
+func (s *InventoryService) setupListeners() error {
+	productCreatedMsgs, err := s.msgBroker.Consume(events.ProductCreated, events.Product, false)
+	if err != nil {
+		s.log.Err(err).Msg("Failed to register a consumer")
+		return err
+	}
+
+	go func() {
+		for msg := range productCreatedMsgs {
+			// e := events.EventData{}
+			// json.Unmarshal(msg, e)
+			// s.log.Printf("Received a event: %s, data: %+v\n")
+			s.log.Printf(" [x] %s", msg.Body)
+		}
+	}()
+
+	return nil
 }
 
 func (s *InventoryService) CreateInventoryItem(ctx context.Context, productID int, quantity int) (*model.InventoryItem, error) {

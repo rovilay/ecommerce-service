@@ -3,7 +3,8 @@ kind: Config
 deploy:
   kubectl:
     manifests:
-      - infra/k8s/db-postgres-depl.yaml 
+      - infra/k8s/db-postgres-depl.yaml
+      - infra/k8s/my-rabbitmq-depl.yaml
       - infra/k8s/product-depl.yaml
       - infra/k8s/inventory-depl.yaml
       - infra/k8s/ingress-srvc.yaml

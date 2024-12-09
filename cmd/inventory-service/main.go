@@ -10,6 +10,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"github.com/rovilay/ecommerce-service/common/events"
 	"github.com/rovilay/ecommerce-service/config"
 	"github.com/rovilay/ecommerce-service/domains/inventory/repository"
 	"github.com/rovilay/ecommerce-service/domains/inventory/service"
@@ -54,8 +55,28 @@ func main() {
 		}
 	}()
 
+	// connect to rabbitmq
+	// conn, err := events.ConnectRabbit(c.RABBITMQ_USER, c.RABBITMQ_PASSWORD, c.RABBITMQ_HOST, c.RABBITMQ_PORT)
+	conn, err := events.ConnectRabbit(c.RABBITMQ_URL)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to connect to rabbitMq")
+	}
+
+	msgBroker, err := events.NewRabbitClient(conn, events.Product)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to create rabbit client")
+	}
+
+	logger.Info().Msg("Connected to rabbit client")
+
+	defer msgBroker.Close()
+
 	repo := repository.NewPostgresInventoryRepository(ctx, db, &logger)
-	service := service.NewInventoryService(repo, &logger)
+	service, err := service.NewInventoryService(repo, msgBroker, &logger)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("service.NewInventoryService: something went wrong")
+	}
+
 	app := inventoryHttp.NewInventoryApp(service, &c, &logger)
 
 	if err = app.Start(ctx); err != nil {

@@ -6,6 +6,7 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 
+COPY ./common ./common/
 COPY ./config/inventory-config.go ./config/
 COPY ./domains/inventory ./domains/inventory/
 COPY ./internal/http/chi/inventory ./internal/http/chi/inventory/

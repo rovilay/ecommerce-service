@@ -2,14 +2,38 @@ package product
 
 import (
 	"context"
+
+	"github.com/rovilay/ecommerce-service/common/events"
 )
 
 type Service struct {
-	repo Repository
+	repo      Repository
+	msgBroker *events.RabbitClient
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repository, b *events.RabbitClient) (*Service, error) {
+	s := &Service{repo: repo, msgBroker: b}
+	err := s.setupQueues()
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
+func (s *Service) setupQueues() error {
+	// create queues and bindings here
+	productCreatedQ, err := s.msgBroker.CreateQueue(string(events.ProductCreated), true, false)
+	if err != nil {
+		return err
+	}
+
+	err = s.msgBroker.CreateBinding(events.Product, productCreatedQ.Name, events.ProductCreated)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Service) GetProduct(ctx context.Context, id int) (*Product, error) {
@@ -17,7 +41,22 @@ func (s *Service) GetProduct(ctx context.Context, id int) (*Product, error) {
 }
 
 func (s *Service) CreateProduct(ctx context.Context, data *Product) (*Product, error) {
-	return s.repo.CreateProduct(ctx, data)
+	p, err := s.repo.CreateProduct(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+
+	// publish event
+	e := events.EventData{
+		Event: events.ProductCreated,
+		Data:  p,
+	}
+	err = s.msgBroker.Send(ctx, string(events.Product), string(events.ProductCreated), e)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, err
 }
 
 func (s *Service) ListProducts(ctx context.Context, limit int, offset int) (*PaginationResult[*Product], error) {
@@ -42,7 +81,6 @@ func (s *Service) ListProducts(ctx context.Context, limit int, offset int) (*Pag
 	pwp.Items = products
 
 	return pwp, nil
-
 }
 
 func (s *Service) UpdateProduct(ctx context.Context, id int, data *Product) (*Product, error) {
