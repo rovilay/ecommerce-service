@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rovilay/ecommerce-service/common/utils"
 	"github.com/rovilay/ecommerce-service/domains/cart/models"
-	"github.com/rovilay/ecommerce-service/utils"
 )
 
 type contextKey string

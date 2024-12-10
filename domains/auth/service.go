@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/rovilay/ecommerce-service/utils"
+	"github.com/rovilay/ecommerce-service/common/utils"
 )
 
 type AuthService interface {

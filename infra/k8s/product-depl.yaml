@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      initContainers:
+        - name: init-checks
+          image: rovilay/ecommerce-service-init-checks
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secrets
+                  key: username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secrets
+                  key: password
+            - name: RABBITMQ_HOST
+              value: my-rabbitmq-srvc
+            - name: RABBITMQ_PORT
+              value: '5672'
+            - name: RABBITMQ_URL
+              value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
+          command: ["./bin/main"]
+        - name: init-migration
+          image: rovilay/ecommerce-db-migration
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: password
+            - name: POSTGRES_DB
+              value: ecommerce
+            - name: POSTGRES_HOST
+              value: db-postgres-srvc
+            - name: POSTGRES_PORT
+              value: '5432'
+            - name: DB_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable"
+          command: ["/bin/sh", "-c"]
+          args:
+          - |
+            # Wait for the PostgreSQL server to start
+            until pg_isready -h $(POSTGRES_HOST) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -t 3; do
+              echo "Waiting for PostgreSQL..."
+              sleep 2
+            done
+
+            # Run database migrations
+            ./bin/migration
+      containers:
+        - name: product
+          image: rovilay/ecommerce-product-service:latest
+          env:
+            - name: PRODUCT_SERVER_PORT
+              value: '3001'
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: password
+            - name: POSTGRES_DB
+              value: ecommerce
+            - name: POSTGRES_HOST
+              value: db-postgres-srvc
+            - name: POSTGRES_PORT
+              value: '5432'
+            - name: DB_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable"
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secrets
+                  key: username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secrets
+                  key: password
+            - name: RABBITMQ_HOST
+              value: my-rabbitmq-srvc
+            - name: RABBITMQ_PORT
+              value: '5672'
+            - name: RABBITMQ_URL
+              value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-srvc
+spec:
+  type: ClusterIP
+  selector:
+    app: product
+  ports:
+    - name: product
+      protocol: TCP
+      port: 3001
+      targetPort: 3001

@@ -1,0 +1,42 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - infra/k8s/db-postgres-depl.yaml
+      - infra/k8s/my-rabbitmq-depl.yaml
+      - infra/k8s/product-depl.yaml
+      - infra/k8s/inventory-depl.yaml
+      - infra/k8s/ingress-srvc.yaml
+build:
+  local:
+    push: false
+  artifacts:
+    - image: rovilay/ecommerce-product-service
+      context: ./
+      docker:
+        dockerfile: ./cmd/product-service/Dockerfile
+      sync:
+        manual:
+          - src: 'domains/product/*.go'
+            dest: '.' 
+          - src: 'internal/http/chi/product/*.go'
+            dest: '.'
+          - src: 'domains/product/*.go'
+            dest: '.' 
+          - src: 'config/product-config/*.go'
+            dest: '.'
+    - image: rovilay/ecommerce-inventory-service
+      context: ./
+      docker:
+        dockerfile: ./cmd/inventory-service/Dockerfile
+      sync:
+        manual:
+          - src: 'domains/inventory/*.go'
+            dest: '.' 
+          - src: 'internal/http/chi/inventory/*.go'
+            dest: '.'
+          - src: 'domains/inventory/*.go'
+            dest: '.' 
+          - src: 'config/inventory-config/*.go'
+            dest: '.'

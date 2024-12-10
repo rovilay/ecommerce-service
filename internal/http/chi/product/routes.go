@@ -34,8 +34,8 @@ func (a *ProductApp) loadRoutes() {
 		w.Write(msg)
 	})
 
-	router.Route("/products", a.loadProductRoutes)
-	router.Route("/categories", a.loadCategoryRoutes)
+	router.Route("/api/v1/products", a.loadProductRoutes)
+	router.Route("/api/v1/categories", a.loadCategoryRoutes)
 
 	// CORS configuration
 	corsRouter := cors.Default().Handler(router)
