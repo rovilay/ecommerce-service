@@ -2,39 +2,44 @@ package product
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/rovilay/ecommerce-service/common/events"
+	"github.com/rs/zerolog"
 )
 
 type Service struct {
-	repo      Repository
-	msgBroker *events.RabbitClient
+	repo Repository
+	log  *zerolog.Logger
+	rc   *events.RabbitClient
 }
 
-func NewService(repo Repository, b *events.RabbitClient) (*Service, error) {
-	s := &Service{repo: repo, msgBroker: b}
-	err := s.setupQueues()
-	if err != nil {
-		return nil, err
-	}
+func NewService(repo Repository, rc *events.RabbitClient, l *zerolog.Logger) (*Service, error) {
+	logger := l.With().Str("service", "InventoryService").Logger()
+	s := &Service{repo: repo, rc: rc, log: &logger}
+	// err := s.setupQueues()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return s, nil
 }
 
-func (s *Service) setupQueues() error {
-	// create queues and bindings here
-	productCreatedQ, err := s.msgBroker.CreateQueue(string(events.ProductCreated), true, false)
-	if err != nil {
-		return err
-	}
+// func (s *Service) setupQueues() error {
+// 	// create queues and bindings here
+// 	productCreatedQ, err := s.rc.CreateQueue(events.ProductCreated, true, false)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = s.msgBroker.CreateBinding(events.Product, productCreatedQ.Name, events.ProductCreated)
-	if err != nil {
-		return err
-	}
+// 	err = s.rc.CreateBinding(events.Product, productCreatedQ.Name, events.ProductCreated)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (s *Service) GetProduct(ctx context.Context, id int) (*Product, error) {
 	return s.repo.GetProductByID(ctx, id)
@@ -46,12 +51,17 @@ func (s *Service) CreateProduct(ctx context.Context, data *Product) (*Product, e
 		return nil, err
 	}
 
+	b, err := json.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
 	// publish event
 	e := events.EventData{
 		Event: events.ProductCreated,
-		Data:  p,
+		Data:  b,
 	}
-	err = s.msgBroker.Send(ctx, string(events.Product), string(events.ProductCreated), e)
+	err = s.publish(ctx, events.Product, events.ProductCreated, e)
 	if err != nil {
 		return nil, err
 	}
@@ -134,4 +144,14 @@ func (s *Service) UpdateCategory(ctx context.Context, id int, data *Category) (*
 
 func (s *Service) SearchCategoriesByName(ctx context.Context, searchTerm string) ([]*Category, error) {
 	return s.repo.SearchCategoriesByName(ctx, searchTerm)
+}
+
+func (s *Service) publish(ctx context.Context, topic events.Topic, key events.RoutingKey, e events.EventData) error {
+	err := s.rc.Publish(ctx, topic, key, e)
+	if err != nil {
+		s.log.Err(err).Msg(fmt.Sprintf("error publishing %s", events.ProductCreated))
+		return err
+	}
+
+	return nil
 }

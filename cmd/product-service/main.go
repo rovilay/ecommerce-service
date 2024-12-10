@@ -61,17 +61,17 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to rabbitMq")
 	}
 
-	msgBroker, err := events.NewRabbitClient(conn, events.Product)
+	rabbitClient, err := events.NewRabbitClient(conn, events.Product)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create rabbit client")
 	}
 
 	logger.Info().Msg("Connected to rabbit client")
 
-	defer msgBroker.Close()
+	defer rabbitClient.Close()
 
 	postgresRepo := product.NewPostgresRepository(ctx, db, logger)
-	productService, err := product.NewService(postgresRepo, msgBroker)
+	productService, err := product.NewService(postgresRepo, rabbitClient, &logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("product.NewService: something went wrong")
 	}

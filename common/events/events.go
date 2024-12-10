@@ -1,10 +1,13 @@
 package events
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type EventData struct {
-	Event RoutingKey  `json:"event"`
-	Data  interface{} `json:"data"`
+	Event RoutingKey      `json:"event"`
+	Data  json.RawMessage `json:"data"`
 }
 
 type ProductCreatedEvent struct {

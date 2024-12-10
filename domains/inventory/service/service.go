@@ -2,55 +2,61 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/rovilay/ecommerce-service/common/events"
 	"github.com/rovilay/ecommerce-service/domains/inventory"
+	eventhandlers "github.com/rovilay/ecommerce-service/domains/inventory/eventHandlers"
 	"github.com/rovilay/ecommerce-service/domains/inventory/model"
 	"github.com/rovilay/ecommerce-service/domains/inventory/repository"
 	"github.com/rs/zerolog"
 )
 
 type InventoryService struct {
-	repo      repository.InventoryRepository
-	msgBroker *events.RabbitClient
-	log       *zerolog.Logger
+	repo repository.InventoryRepository
+	rc   *events.RabbitClient
+	log  *zerolog.Logger
+	hc   *eventhandlers.HandlerClient
 }
 
-func NewInventoryService(repo repository.InventoryRepository, b *events.RabbitClient, l *zerolog.Logger) (*InventoryService, error) {
+func NewInventoryService(repo repository.InventoryRepository, rc *events.RabbitClient, l *zerolog.Logger) (*InventoryService, error) {
 	logger := l.With().Str("service", "InventoryService").Logger()
 
+	hc := eventhandlers.NewHandlerClient(repo, &logger)
+
 	s := &InventoryService{
-		repo:      repo,
-		msgBroker: b,
-		log:       &logger,
+		repo: repo,
+		rc:   rc,
+		log:  &logger,
+		hc:   hc,
 	}
 
-	err := s.setupListeners()
-	if err != nil {
-		return nil, err
-	}
+	// err := s.setupListeners()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	return s, err
+	return s, nil
 }
 
-func (s *InventoryService) setupListeners() error {
-	productCreatedMsgs, err := s.msgBroker.Consume(events.ProductCreated, events.Product, false)
-	if err != nil {
-		s.log.Err(err).Msg("Failed to register a consumer")
-		return err
-	}
+// func (s *InventoryService) setupListeners([]events.RoutingKey) error {
+// 	productCreatedMsgs, err := s.rc.Consume(context.Background(), events.ProductCreated, events.Product, false)
+// 	if err != nil {
+// 		s.log.Err(err).Msg("Failed to register a consumer")
+// 		return err
+// 	}
 
-	go func() {
-		for msg := range productCreatedMsgs {
-			// e := events.EventData{}
-			// json.Unmarshal(msg, e)
-			// s.log.Printf("Received a event: %s, data: %+v\n")
-			s.log.Printf(" [x] %s", msg.Body)
-		}
-	}()
+// 	go func() {
+// 		for msg := range productCreatedMsgs {
+// 			// e := events.EventData{}
+// 			// json.Unmarshal(msg, e)
+// 			// s.log.Printf("Received a event: %s, data: %+v\n")
+// 			s.log.Printf(" [x] %s", msg.Body)
+// 		}
+// 	}()
 
-	return nil
-}
+// 	return nil
+// }
 
 func (s *InventoryService) CreateInventoryItem(ctx context.Context, productID int, quantity int) (*model.InventoryItem, error) {
 	if quantity < 0 {
@@ -83,4 +89,47 @@ func (s *InventoryService) DecrementInventory(ctx context.Context, productID int
 
 func (s *InventoryService) IncrementInventory(ctx context.Context, productID int, quantity uint) error {
 	return s.repo.UpdateInventoryQuantity(ctx, productID, int(quantity))
+}
+
+func (s *InventoryService) Publish(ctx context.Context, topic events.Topic, key events.RoutingKey, e events.EventData) error {
+	// create exchange if it doesn't exist
+	err := s.rc.CreateExchange(topic, true, false)
+	if err != nil {
+		s.log.Err(err).Msg("Failed to create exchange")
+		return err
+	}
+
+	return s.rc.Send(ctx, topic, key, e)
+}
+
+func (s *InventoryService) Listen(ctx context.Context, topic events.Topic, key events.RoutingKey) error {
+	msgs, err := s.rc.Listen(ctx, events.Product, key, false)
+	if err != nil {
+		s.log.Err(err).Msg("Failed to create queue binding")
+		return err
+	}
+
+	go func() {
+		for msg := range msgs {
+			s.log.Printf("Received a event: %v", msg.Body)
+			e := events.EventData{}
+			if err := json.Unmarshal(msg.Body, &e); err != nil {
+				s.log.Err(err).Msg("error marshalling event")
+				continue
+			}
+
+			err = s.hc.HandleEvent(ctx, e)
+			if err != nil {
+				s.log.Err(err).Msgf("Error handling event: %s", msg.MessageId)
+				continue
+			}
+
+			msg.Ack(false)
+			if err != nil {
+				s.log.Err(err).Msgf("failed to acknowledge message: %s", msg.MessageId)
+			}
+		}
+	}()
+
+	return nil
 }

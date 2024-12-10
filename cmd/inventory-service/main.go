@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	"github.com/rovilay/ecommerce-service/common/events"
 	"github.com/rovilay/ecommerce-service/config"
 	"github.com/rovilay/ecommerce-service/domains/inventory/repository"
@@ -30,16 +28,16 @@ func main() {
 	ctx = logger.WithContext(ctx)
 
 	// load env
-	envPath, err := filepath.Abs("./.env")
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Error resolving .env path")
-	}
+	// envPath, err := filepath.Abs("./.env")
+	// if err != nil {
+	// 	logger.Fatal().Err(err).Msg("Error resolving .env path")
+	// }
 
-	err = godotenv.Load(envPath)
-	if err != nil {
-		// logger.Fatal().Err(err).Msg("Error loading .env file")
-		logger.Err(err).Msg("error loading .env file")
-	}
+	// err = godotenv.Load(envPath)
+	// if err != nil {
+	// 	// logger.Fatal().Err(err).Msg("Error loading .env file")
+	// 	logger.Err(err).Msg("error loading .env file")
+	// }
 
 	// load the config
 	c := config.LoadInventoryConfig()
@@ -76,6 +74,11 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("service.NewInventoryService: something went wrong")
 	}
+
+	// listen for events
+	go func() {
+		service.Listen(ctx, events.Product, events.ProductCreated)
+	}()
 
 	app := inventoryHttp.NewInventoryApp(service, &c, &logger)
 
