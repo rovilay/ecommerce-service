@@ -13,7 +13,7 @@ spec:
         app: inventory
     spec:
       initContainers:
-        - name: init-checks
+        - name: init-checks-inventory
           image: rovilay/ecommerce-service-init-checks
           env:
             - name: RABBITMQ_DEFAULT_USER
@@ -33,7 +33,8 @@ spec:
             - name: RABBITMQ_URL
               value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
           command: ["./bin/main"]
-        - name: init-migration
+          args: ["--exclude", "redis"]
+        - name: init-migration-inventory
           image: rovilay/ecommerce-db-migration
           env:
             - name: POSTGRES_USER
@@ -103,10 +104,8 @@ spec:
               value: my-rabbitmq-srvc
             - name: RABBITMQ_PORT
               value: '5672'
-            # - name: RABBITMQ_URL
-            #   value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
             - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@my-rabbitmq-srvc:5672"
+              value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
 
 ---
 

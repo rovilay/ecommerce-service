@@ -47,11 +47,6 @@ func (a *InventoryApp) loadInventoryRoutes(router chi.Router) {
 	router.Get("/products/{id}", h.GetInventory)
 	router.Get("/products/{id}/available", h.CheckAvailability)
 
-	router.Group(func(r chi.Router) {
-		r.Use(h.MiddlewareValidateInventory)
-		r.Post("/", h.CreateInventory)
-	})
-
 	router.Put("/products/{id}/increase", h.IncrementInventory)
 	router.Put("/products/{id}/decrease", h.DecrementInventory)
 }

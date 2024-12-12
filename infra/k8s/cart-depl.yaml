@@ -1,19 +1,28 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cart-secrets
+type: Opaque
+data:
+  auth-secret: c2VjcmV0
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-depl
+  name: cart-depl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: product
+      app: cart
   template:
     metadata:
       labels:
-        app: product
+        app: cart
     spec:
       initContainers:
-        - name: init-checks-product
+        - name: init-checks-cart
           image: rovilay/ecommerce-service-init-checks
           env:
             - name: RABBITMQ_DEFAULT_USER
@@ -32,9 +41,15 @@ spec:
               value: '5672'
             - name: RABBITMQ_URL
               value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
+            - name: REDIS_HOST
+              value: cart-redis-srvc
+            - name: REDIS_PORT
+              value: '6379'
+            - name: REDIS_URL
+              # value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
+              value: "$(REDIS_HOST):$(REDIS_PORT)"
           command: ["./bin/main"]
-          args: ["--exclude", "redis"]
-        - name: init-migration-product
+        - name: init-migration-cart
           image: rovilay/ecommerce-db-migration
           env:
             - name: POSTGRES_USER
@@ -67,10 +82,10 @@ spec:
             # Run database migrations
             ./bin/migration
       containers:
-        - name: product
-          image: rovilay/ecommerce-product-service:latest
+        - name: cart
+          image: rovilay/ecommerce-cart-service:latest
           env:
-            - name: PRODUCT_SERVER_PORT
+            - name: CART_SERVER_PORT
               value: '3001'
             - name: POSTGRES_USER
               valueFrom:
@@ -106,19 +121,41 @@ spec:
               value: '5672'
             - name: RABBITMQ_URL
               value: "amqp://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)"
+            - name: REDIS_USERNAME 
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: username
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: password
+            - name: REDIS_HOST
+              value: cart-redis-srvc
+            - name: REDIS_PORT
+              value: '6379'
+            - name: REDIS_URL
+              # value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
+              value: "$(REDIS_HOST):$(REDIS_PORT)"
+            - name: USER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cart-secrets
+                  key: auth-secret
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: product-srvc
+  name: cart-srvc
 spec:
   type: ClusterIP
   selector:
-    app: product
+    app: cart
   ports:
-    - name: product
+    - name: cart
       protocol: TCP
       port: 3001
       targetPort: 3001

@@ -33,7 +33,7 @@ func (a *CartApp) loadRoutes() {
 		w.Write(msg)
 	})
 
-	router.Route("/cart", a.loadCartRoutes)
+	router.Route("/api/v1/cart", a.loadCartRoutes)
 
 	// CORS configuration
 	corsRouter := cors.Default().Handler(router)

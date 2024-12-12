@@ -8,7 +8,47 @@ data:
   password: cG9zdGdyZXM=
 
 ---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: postgres-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: kubernetes.io/host-path  # Or another suitable provisioner
+reclaimPolicy: Retain  # Or another suitable reclaim policy
+volumeBindingMode: Immediate
 
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: postgres-pv
+  labels:
+    app: postgres
+    type: local
+spec:
+  storageClassName: postgres-sc
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/var/postgresql/data"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi # Adjust storage size as needed
+  storageClassName: postgres-sc
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,13 +85,13 @@ spec:
             value: localhost
           - name: POSTGRES_PORT
             value: '5432'
-      #   volumeMounts:
-      #   - name: postgres-persistent-storage
-      #     mountPath: /var/lib/postgres/data
-      # volumes:
-      # - name: postgres-persistent-storage
-      #   persistentVolumeClaim:
-      #     claimName: postgres-pv-claim
+        volumeMounts:
+        - name: postgres-persistent-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-persistent-storage
+        persistentVolumeClaim:
+          claimName: postgres-pv-claim
 
 ---
 apiVersion: v1
@@ -66,15 +106,3 @@ spec:
   - protocol: TCP
     port: 5432
     targetPort: 5432
-
-# ---
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: postgres-pv-claim
-# spec:
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 1Gi # Adjust storage size as needed

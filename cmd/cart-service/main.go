@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"github.com/rovilay/ecommerce-service/config"
 	"github.com/rovilay/ecommerce-service/domains/auth"
@@ -32,15 +30,16 @@ func main() {
 	ctx = logger.WithContext(ctx)
 
 	// load env
-	envPath, err := filepath.Abs("./.env")
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Error resolving .env path")
-	}
+	// envPath, err := filepath.Abs("./.env")
+	// if err != nil {
+	// 	logger.Fatal().Err(err).Msg("Error resolving .env path")
+	// }
 
-	err = godotenv.Load(envPath)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Error loading .env file")
-	}
+	// err = godotenv.Load(envPath)
+	// if err != nil {
+	// 	// logger.Fatal().Err(err).Msg("Error loading .env file")
+	// 	logger.Err(err).Msg("error loading .env file")
+	// }
 
 	// load the config
 	c := config.LoadCartConfig(&logger)
@@ -62,7 +61,7 @@ func main() {
 	})
 	err = cache.Ping(ctx).Err()
 	if err != nil {
-		logger.Fatal().Err(err).Msg(fmt.Sprintf("failed to connect to redis: %s", c.RedisURL))
+		logger.Fatal().Err(err).Msgf("failed to connect to redis: %s", c.RedisURL)
 	}
 	defer func() {
 		if err := cache.Close(); err != nil {

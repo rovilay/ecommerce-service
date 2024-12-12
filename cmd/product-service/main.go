@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	"github.com/rovilay/ecommerce-service/common/events"
 	"github.com/rovilay/ecommerce-service/config"
 	"github.com/rovilay/ecommerce-service/domains/product"
@@ -28,17 +26,17 @@ func main() {
 	// attach logger to context
 	ctx = logger.WithContext(ctx)
 
-	envPath, err := filepath.Abs("./.env")
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Error resolving .env path")
-	}
+	// envPath, err := filepath.Abs("./.env")
+	// if err != nil {
+	// 	logger.Fatal().Err(err).Msg("Error resolving .env path")
+	// }
 
-	// Load .env file from the current directory
-	err = godotenv.Load(envPath)
-	if err != nil {
-		// logger.Fatal().Err(err).Msg("Error loading .env file")
-		logger.Err(err).Msg("error loading .env file")
-	}
+	// // Load .env file from the current directory
+	// err = godotenv.Load(envPath)
+	// if err != nil {
+	// 	// logger.Fatal().Err(err).Msg("Error loading .env file")
+	// 	logger.Err(err).Msg("error loading .env file")
+	// }
 
 	// load config
 	c := config.LoadProductConfig()
