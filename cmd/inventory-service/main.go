@@ -60,17 +60,17 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to rabbitMq")
 	}
 
-	msgBroker, err := events.NewRabbitClient(conn, events.Product)
+	rabbitClient, err := events.NewRabbitClient(conn, events.Product)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create rabbit client")
 	}
 
 	logger.Info().Msg("Connected to rabbit client")
 
-	defer msgBroker.Close()
+	defer rabbitClient.Close()
 
 	repo := repository.NewPostgresInventoryRepository(ctx, db, &logger)
-	service, err := service.NewInventoryService(repo, msgBroker, &logger)
+	service, err := service.NewInventoryService(repo, rabbitClient, &logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("service.NewInventoryService: something went wrong")
 	}

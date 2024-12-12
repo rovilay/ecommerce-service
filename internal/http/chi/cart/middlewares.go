@@ -25,17 +25,6 @@ func (h *CartHandler) MiddlewareValidateCartItem(next http.Handler) http.Handler
 			return
 		}
 
-		// validate url
-		// err = inv.Validate()
-		// if err != nil {
-		// 	h.log.Println("[ERROR] validating inventory", err)
-		// 	http.Error(
-		// 		w, fmt.Sprintf(`{"error": "Error validating inventory: %s"}`, err),
-		// 		http.StatusBadRequest,
-		// 	)
-		// 	return
-		// }
-
 		// add validated data
 		ctx := context.WithValue(r.Context(), CartCTXKey, item)
 		r = r.WithContext(ctx)

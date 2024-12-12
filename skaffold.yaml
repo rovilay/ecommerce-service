@@ -5,8 +5,10 @@ deploy:
     manifests:
       - infra/k8s/db-postgres-depl.yaml
       - infra/k8s/my-rabbitmq-depl.yaml
+      - infra/k8s/cart-redis-depl.yaml
       - infra/k8s/product-depl.yaml
       - infra/k8s/inventory-depl.yaml
+      - infra/k8s/cart-depl.yaml
       - infra/k8s/ingress-srvc.yaml
 build:
   local:
@@ -18,6 +20,8 @@ build:
         dockerfile: ./cmd/product-service/Dockerfile
       sync:
         manual:
+          - src: 'cmd/product-service/*.go'
+            dest: '.' 
           - src: 'domains/product/*.go'
             dest: '.' 
           - src: 'internal/http/chi/product/*.go'
@@ -32,6 +36,8 @@ build:
         dockerfile: ./cmd/inventory-service/Dockerfile
       sync:
         manual:
+          - src: 'cmd/inventory-service/*.go'
+            dest: '.' 
           - src: 'domains/inventory/*.go'
             dest: '.' 
           - src: 'internal/http/chi/inventory/*.go'
@@ -39,4 +45,28 @@ build:
           - src: 'domains/inventory/*.go'
             dest: '.' 
           - src: 'config/inventory-config/*.go'
+            dest: '.'
+    - image: rovilay/ecommerce-cart-service
+      context: ./
+      docker:
+        dockerfile: ./cmd/cart-service/Dockerfile
+      sync:
+        manual:
+          - src: 'cmd/cart-service/*.go'
+            dest: '.' 
+          - src: 'domains/cart/*.go'
+            dest: '.' 
+          - src: 'internal/http/chi/cart/*.go'
+            dest: '.'
+          - src: 'domains/cart/*.go'
+            dest: '.' 
+          - src: 'config/cart-config/*.go'
+            dest: '.'
+    - image: rovilay/ecommerce-service-init-checks
+      context: ./
+      docker:
+        dockerfile: ./infra/Dockerfile.initchecks
+      sync:
+        manual:
+          - src: 'infra/init-checks.go'
             dest: '.'

@@ -111,7 +111,7 @@ func (s *InventoryService) Listen(ctx context.Context, topic events.Topic, key e
 
 	go func() {
 		for msg := range msgs {
-			s.log.Printf("Received a event: %v", msg.Body)
+			s.log.Printf("Received an event 🙂: %v", msg.Body)
 			e := events.EventData{}
 			if err := json.Unmarshal(msg.Body, &e); err != nil {
 				s.log.Err(err).Msg("error marshalling event")
@@ -124,7 +124,7 @@ func (s *InventoryService) Listen(ctx context.Context, topic events.Topic, key e
 				continue
 			}
 
-			msg.Ack(false)
+			err = msg.Ack(false)
 			if err != nil {
 				s.log.Err(err).Msgf("failed to acknowledge message: %s", msg.MessageId)
 			}

@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secrets
+type: Opaque
+data:
+  username: cG9zdGdyZXM=
+  password: cG9zdGdyZXM=
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-redis-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart-redis
+  template:
+    metadata:
+      labels:
+        app: cart-redis
+    spec:
+      containers:
+        - name: cart-redis
+          image: redis
+          ports:
+            - containerPort: 6379
+          # env:
+          #   - name: REDIS_USERNAME 
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: redis-secrets
+          #         key: username
+          #   - name: REDIS_PASSWORD
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: redis-secrets
+          #         key: password
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-redis-srvc
+spec:
+  type: ClusterIP
+  selector:
+    app: cart-redis
+  ports:
+    - name: db
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+

@@ -21,6 +21,3 @@ COPY --from=build /bin/migration /bin/migration
 RUN apt-get update && \
     apt-get install -y postgresql-client && \
     rm -rf /var/lib/apt/lists/*
-
-# run migrations
-# CMD ["./bin/migration"]

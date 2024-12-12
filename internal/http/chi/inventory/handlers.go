@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rovilay/ecommerce-service/domains/inventory"
-	"github.com/rovilay/ecommerce-service/domains/inventory/model"
 	"github.com/rovilay/ecommerce-service/domains/inventory/service"
 	"github.com/rs/zerolog"
 )
@@ -33,24 +32,6 @@ type successOperation struct {
 }
 
 var defaultSuccessRes = successOperation{Success: "operation successful!"}
-
-func (h *InventoryHandler) CreateInventory(w http.ResponseWriter, r *http.Request) {
-	log := h.log.With().Str("method", "CreateInventory").Logger()
-	data := r.Context().Value(InvCTXKey).(*model.InventoryItem)
-
-	newInv, err := h.service.CreateInventoryItem(r.Context(), data.ProductID, data.Quantity)
-	if err != nil {
-		h.sendError(w, err, "", 0, &log)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-
-	if err := newInv.ToJSON(w); err != nil {
-		h.sendError(w, err, "failed to marshal", 0, &log)
-		return
-	}
-}
 
 func (h *InventoryHandler) GetInventory(w http.ResponseWriter, r *http.Request) {
 	log := h.log.With().Str("method", "GetInventory").Logger()

@@ -31,3 +31,10 @@ spec:
                 name: inventory-srvc
                 port:
                   number: 3001
+          - path: /api/v1/cart/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: cart-srvc
+                port:
+                  number: 3001
