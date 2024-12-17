@@ -33,7 +33,7 @@ func (a *OrderApp) loadRoutes() {
 		w.Write(msg)
 	})
 
-	router.Route("/orders", a.loadOrderRoutes)
+	router.Route("/api/v1/orders", a.loadOrderRoutes)
 
 	// CORS configuration
 	corsRouter := cors.Default().Handler(router)

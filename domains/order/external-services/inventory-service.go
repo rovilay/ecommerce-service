@@ -28,7 +28,7 @@ func NewHTTPInventoryService(baseURL string) *HTTPInventoryService {
 }
 
 func (s *HTTPInventoryService) CheckAvailability(ctx context.Context, productID int, quantity int) (bool, error) {
-	url := fmt.Sprintf("%s/inventory/products/%d/available?qty=%d", s.baseURL, productID, quantity)
+	url := fmt.Sprintf("%s/api/v1/inventory/products/%d/available?qty=%d", s.baseURL, productID, quantity)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return false, err

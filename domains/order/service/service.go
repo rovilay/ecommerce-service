@@ -61,6 +61,8 @@ func (s *OrderService) CreateOrder(ctx context.Context, authToken string, data *
 			return nil, err
 		}
 
+		log.Debug().Msgf("🥰%+v", orderItemsFromCart)
+
 		data.OrderItems = orderItemsFromCart
 	}
 
@@ -71,6 +73,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, authToken string, data *
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*duration)
 	defer cancel()
 
+	log.Debug().Msgf("🥰🥰Before%+v", data.OrderItems)
 	validOrderItems, totalPrice, err := s.validateOrderItems(timeoutCtx, data.OrderItems)
 	if err != nil {
 		log.Err(err).Msg("error validating order items")
@@ -80,6 +83,8 @@ func (s *OrderService) CreateOrder(ctx context.Context, authToken string, data *
 	data.OrderItems = validOrderItems
 	data.TotalPrice = totalPrice
 	data.Status = models.OrderStatusPending
+
+	log.Debug().Msgf("🥰🥰%+v", data.OrderItems)
 
 	order, err := s.repo.CreateOrder(ctx, data)
 	if err != nil {
@@ -191,6 +196,7 @@ func (s *OrderService) validateOrderItems(ctx context.Context, items []models.Or
 			defer wg.Done()
 
 			res, err := s.validateOrderItem(ctx, item)
+			s.log.Debug().Msgf("🥰🥰❌%+v", res)
 			if err != nil {
 				validationErrors = append(validationErrors, err.Error())
 				return
@@ -200,22 +206,25 @@ func (s *OrderService) validateOrderItems(ctx context.Context, items []models.Or
 				results[index] = *item
 				results[index].ProductID = res.productID
 				results[index].Price = res.price
+			} else {
+				validationErrors = append(validationErrors, fmt.Sprintf("product:%d not available", item.ID))
 			}
 		}(i, &item)
 	}
 
 	wg.Wait()
-	totalPrice := s.calculateTotalPrice(results)
 
 	if len(validationErrors) > 0 {
 		return nil, 0, fmt.Errorf("validation errors: %v", validationErrors)
 	}
 
+	totalPrice := s.calculateTotalPrice(results)
+
 	return results, totalPrice, nil
 }
 
 func (s *OrderService) validateOrderItem(ctx context.Context, orderItem *models.OrderItem) (*validationResult, error) {
-	vRes := validationResult{}
+	vRes := &validationResult{}
 
 	numRoutines := 2
 	productChan := make(chan *externalservices.Product)
@@ -228,15 +237,18 @@ func (s *OrderService) validateOrderItem(ctx context.Context, orderItem *models.
 			errChan <- err
 			return
 		}
+
 		productChan <- prd
 	}()
 
 	go func() {
 		available, err := s.inventoryService.CheckAvailability(ctx, orderItem.ProductID, orderItem.Quantity)
+		s.log.Debug().Msgf("available:🥰❌%v", available)
 		if err != nil {
 			errChan <- err
 			return
 		}
+
 		availabilityChan <- available
 	}()
 
@@ -254,7 +266,7 @@ func (s *OrderService) validateOrderItem(ctx context.Context, orderItem *models.
 		}
 	}
 
-	return &vRes, nil
+	return vRes, nil
 }
 
 func (s *OrderService) calculateTotalPrice(items []models.OrderItem) float32 {
