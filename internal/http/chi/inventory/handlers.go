@@ -42,13 +42,13 @@ func (h *InventoryHandler) GetInventory(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	prd, err := h.service.GetInventoryByProductID(r.Context(), productID)
+	ivntry, err := h.service.GetInventoryByProductID(r.Context(), productID)
 	if err != nil {
 		h.sendError(w, err, "", 0, &log)
 		return
 	}
 
-	if err := prd.ToJSON(w); err != nil {
+	if err := ivntry.ToJSON(w); err != nil {
 		h.sendError(w, err, "failed to marshal", 0, &log)
 		return
 	}
@@ -156,6 +156,7 @@ func (h *InventoryHandler) IncrementInventory(w http.ResponseWriter, r *http.Req
 
 func (h *InventoryHandler) sendError(w http.ResponseWriter, err error, errMsg string, statusCode int, log *zerolog.Logger) {
 	log.Err(err)
+
 	if errMsg == "" {
 		errMsg = err.Error()
 	}

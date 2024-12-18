@@ -39,9 +39,10 @@ A ecommerce service that focuses on product management and order processing.
 * **GET /products** 
    * Retrieves a list of products.
    * Supports optional query parameters for:
-      * Search terms (search by name, description)
-      * Category filtering
-      * Pagination
+      * Search terms (search by name, description) - TBD
+      * Category filtering - TBD
+      * limit
+      * offset
  
 * **GET /products/search**
    * Search products by name
@@ -81,12 +82,14 @@ A ecommerce service that focuses on product management and order processing.
 * **GET /inventory/{product_id}/availability**
     * Retrieves available stock for a specific product
 
-* **PUT /inventory/{product_id}/hold**
-    * Places a temporary hold on a specified quantity of a product (associates it with a Cart if relevant).
-    * Should include an expiration mechanism for holds.
+* **GET /inventory/{product_id}/available?qty=**
+    * checks if product stock qty is available
 
-* **PUT /inventory/{product_id}/decrement**
-    * Decrements the stock level for a product, usually triggered after order placement.
+* **PUT /inventory/{product_id}/increase**
+    * Increments the stock level for a product
+
+* **PUT /inventory/{product_id}/decrease**
+    * Decrements the stock level for a product.
 
 
 ### **Cart Service**

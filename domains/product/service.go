@@ -18,28 +18,9 @@ type Service struct {
 func NewService(repo Repository, rc *events.RabbitClient, l *zerolog.Logger) (*Service, error) {
 	logger := l.With().Str("service", "InventoryService").Logger()
 	s := &Service{repo: repo, rc: rc, log: &logger}
-	// err := s.setupQueues()
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	return s, nil
 }
-
-// func (s *Service) setupQueues() error {
-// 	// create queues and bindings here
-// 	productCreatedQ, err := s.rc.CreateQueue(events.ProductCreated, true, false)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = s.rc.CreateBinding(events.Product, productCreatedQ.Name, events.ProductCreated)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
 
 func (s *Service) GetProduct(ctx context.Context, id int) (*Product, error) {
 	return s.repo.GetProductByID(ctx, id)

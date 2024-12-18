@@ -18,17 +18,17 @@ func (h *CategoryHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prd, err := h.service.GetCategory(r.Context(), categoryID)
+	ctgry, err := h.service.GetCategory(r.Context(), categoryID)
 	if errors.Is(err, product.ErrNotExist) {
 		http.Error(w, `{"error": "category resource not found"}`, http.StatusNotFound)
 		return
 	} else if err != nil {
-		h.log.Println("failed to get product: ", err)
-		http.Error(w, `{"error": "failed to get product"}`, http.StatusInternalServerError)
+		h.log.Println("failed to get category: ", err)
+		http.Error(w, `{"error": "failed to get category"}`, http.StatusInternalServerError)
 		return
 	}
 
-	if err := prd.ToJSON(w); err != nil {
+	if err := ctgry.ToJSON(w); err != nil {
 		h.log.Println("failed to marshal: ", err)
 		http.Error(w, `{"error": "failed to marshal"}`, http.StatusInternalServerError)
 		return
@@ -108,7 +108,7 @@ func (h *CategoryHandler) UpdateCategory(w http.ResponseWriter, r *http.Request)
 func (h *CategoryHandler) SearchCategories(w http.ResponseWriter, r *http.Request) {
 	searchTerm := r.URL.Query().Get("q")
 	if searchTerm == "" {
-		http.Error(w, `{"error": "search term empty"}`, http.StatusBadGateway)
+		http.Error(w, `{"error": "search term empty"}`, http.StatusBadRequest)
 		return
 	}
 	res, err := h.service.SearchCategoriesByName(r.Context(), searchTerm)
