@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"github.com/rovilay/ecommerce-service/config"
 	"github.com/rovilay/ecommerce-service/domains/auth"
@@ -23,7 +21,7 @@ import (
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	logger := zerolog.New(os.Stdout).With().Str("component", "cart-service:main").Timestamp().Logger()
+	logger := zerolog.New(os.Stdout).With().Str("component", "order-service:main").Timestamp().Logger()
 
 	// notify context of os.Interrupt signal
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -33,15 +31,16 @@ func main() {
 	ctx = logger.WithContext(ctx)
 
 	// load env
-	envPath, err := filepath.Abs("./.env")
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Error resolving .env path")
-	}
+	// envPath, err := filepath.Abs("./.env")
+	// if err != nil {
+	// 	logger.Fatal().Err(err).Msg("Error resolving .env path")
+	// }
 
-	err = godotenv.Load(envPath)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Error loading .env file")
-	}
+	// err = godotenv.Load(envPath)
+	// if err != nil {
+	//	// logger.Fatal().Err(err).Msg("Error loading .env file")
+	// 	logger.Err(err).Msg("error loading .env file")
+	// }
 
 	// load the config
 	c := config.LoadOrderConfig(&logger)

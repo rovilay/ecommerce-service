@@ -31,7 +31,7 @@ func NewHTTPProductService(baseURL string) *HTTPProductService {
 }
 
 func (s *HTTPProductService) GetProduct(ctx context.Context, productID int) (*Product, error) {
-	url := fmt.Sprintf("%s/products/%d", s.baseURL, productID)
+	url := fmt.Sprintf("%s/api/v1/products/%d", s.baseURL, productID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

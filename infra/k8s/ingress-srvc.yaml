@@ -38,3 +38,10 @@ spec:
                 name: cart-srvc
                 port:
                   number: 3001
+          - path: /api/v1/orders/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: order-srvc
+                port:
+                  number: 3001

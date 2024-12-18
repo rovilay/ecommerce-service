@@ -36,21 +36,6 @@ type PaginationResult[T any] struct {
 	Total  int `json:"total"`
 }
 
-type Operations interface {
-	GetProduct(tx context.Context, id int) (*Product, error)
-	CreateProduct(tx context.Context, data *Product) (*Product, error)
-	ListProducts(tx context.Context, limit int, offset int) (*PaginationResult[*Product], error)
-	UpdateProduct(tx context.Context, id int, data *Product) (*Product, error)
-	DeleteProduct(tx context.Context, id int) error
-	SearchProductsByName(ctx context.Context, searchTerm string) ([]*Product, error)
-
-	GetCategory(ctx context.Context, id int) (*Category, error)
-	CreateCategory(ctx context.Context, data *Category) (*Category, error)
-	ListCategories(ctx context.Context, limit int, offset int) (*PaginationResult[*Category], error)
-	UpdateCategory(ctx context.Context, id int, data *Category) (*Category, error)
-	SearchCategoriesByName(ctx context.Context, searchTerm string) ([]*Category, error)
-}
-
 type Repository interface {
 	GetProductByID(ctx context.Context, id int) (*Product, error)
 	GetAllProducts(ctx context.Context, limit int, offset int) ([]*Product, error)

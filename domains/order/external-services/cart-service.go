@@ -37,7 +37,7 @@ func NewHTTPCartService(baseURL string) *HTTPCartService {
 }
 
 func (s *HTTPCartService) GetCart(ctx context.Context, authToken string) (*Cart, error) {
-	url := fmt.Sprintf("%s/cart", s.baseURL)
+	url := fmt.Sprintf("%s/api/v1/cart", s.baseURL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (s *HTTPCartService) GetCart(ctx context.Context, authToken string) (*Cart,
 }
 
 func (s *HTTPCartService) ClearCart(ctx context.Context, authToken string) error {
-	url := fmt.Sprintf("%s/cart", s.baseURL)
+	url := fmt.Sprintf("%s/api/v1/cart", s.baseURL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {
 		return err

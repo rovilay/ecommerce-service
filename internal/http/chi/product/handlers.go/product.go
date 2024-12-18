@@ -129,7 +129,7 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) SearchProducts(w http.ResponseWriter, r *http.Request) {
 	searchTerm := r.URL.Query().Get("q")
 	if searchTerm == "" {
-		http.Error(w, `{"error": "search term empty"}`, http.StatusBadGateway)
+		http.Error(w, `{"error": "search term empty"}`, http.StatusBadRequest)
 		return
 	}
 	res, err := h.service.SearchProductsByName(r.Context(), searchTerm)

@@ -31,32 +31,8 @@ func NewInventoryService(repo repository.InventoryRepository, rc *events.RabbitC
 		hc:   hc,
 	}
 
-	// err := s.setupListeners()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	return s, nil
 }
-
-// func (s *InventoryService) setupListeners([]events.RoutingKey) error {
-// 	productCreatedMsgs, err := s.rc.Consume(context.Background(), events.ProductCreated, events.Product, false)
-// 	if err != nil {
-// 		s.log.Err(err).Msg("Failed to register a consumer")
-// 		return err
-// 	}
-
-// 	go func() {
-// 		for msg := range productCreatedMsgs {
-// 			// e := events.EventData{}
-// 			// json.Unmarshal(msg, e)
-// 			// s.log.Printf("Received a event: %s, data: %+v\n")
-// 			s.log.Printf(" [x] %s", msg.Body)
-// 		}
-// 	}()
-
-// 	return nil
-// }
 
 func (s *InventoryService) CreateInventoryItem(ctx context.Context, productID int, quantity int) (*model.InventoryItem, error) {
 	if quantity < 0 {
@@ -114,7 +90,7 @@ func (s *InventoryService) Listen(ctx context.Context, topic events.Topic, key e
 			s.log.Printf("Received an event 🙂: %v", msg.Body)
 			e := events.EventData{}
 			if err := json.Unmarshal(msg.Body, &e); err != nil {
-				s.log.Err(err).Msg("error marshalling event")
+				s.log.Err(err).Msg("error unmarshalling event")
 				continue
 			}
 

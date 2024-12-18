@@ -6,9 +6,11 @@ deploy:
       - infra/k8s/db-postgres-depl.yaml
       - infra/k8s/my-rabbitmq-depl.yaml
       - infra/k8s/cart-redis-depl.yaml
+      - infra/k8s/order-redis-depl.yaml
       - infra/k8s/product-depl.yaml
       - infra/k8s/inventory-depl.yaml
       - infra/k8s/cart-depl.yaml
+      - infra/k8s/order-depl.yaml
       - infra/k8s/ingress-srvc.yaml
 build:
   local:
@@ -61,6 +63,22 @@ build:
           - src: 'domains/cart/*.go'
             dest: '.' 
           - src: 'config/cart-config/*.go'
+            dest: '.'
+    - image: rovilay/ecommerce-order-service
+      context: ./
+      docker:
+        dockerfile: ./cmd/order-service/Dockerfile
+      sync:
+        manual:
+          - src: 'cmd/order-service/*.go'
+            dest: '.' 
+          - src: 'domains/order/*.go'
+            dest: '.' 
+          - src: 'internal/http/chi/order/*.go'
+            dest: '.'
+          - src: 'domains/order/*.go'
+            dest: '.' 
+          - src: 'config/order-config/*.go'
             dest: '.'
     - image: rovilay/ecommerce-service-init-checks
       context: ./
